@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "../R_S"
+		},
+		{
+			"path": "../personal"
+		},
+		{
+			"path": "../SPOTIFY"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "FRONT"
+	}
+}

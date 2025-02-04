@@ -1,0 +1,348 @@
+<!-- <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+    <% for(let listing of allListings){ %>
+        <a href="/listings/<%= listing._id %> " class="listing-link">
+        <div  class="card col listing-card" style="width: 15rem">
+
+            <img src=" <%= listing.image.url %>" class="card-img-top" alt="listing-img"  style="height: 15rem">
+            <div class="card-img-overlay">pune</div>
+            <div class="card-body">
+                <p class="card-text"><b><%= listing.title %> </b> <br>
+                  &#8377;  <%= listing.price.toLocaleString("en-IN") %> / night
+                <i class="tax-info"> &nbsp;&nbsp; +18% GST</i></p>
+            </div>
+        </div>
+    </a>
+    <% }%>
+</div> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="/css/rating.css">
+</head>
+<body>
+    <%- include("../includes/navbar.ejs") %>
+    <div class="container">
+        <%- include("../includes/flash.ejs") %>
+          
+          
+          
+    </div>
+    <!-- change -->
+    <%- include("../includes/footer.ejs") %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="/js/script.js"></script>
+</body>
+</html>
+
+
+
+<!-- <form action="/listings" method="GET" class="d-flex" role="search">
+                    <input class="form-control me-2 search-inp" type="text" placeholder="Search by city..." value="<%= city %>" >
+                    <button class="btn search-btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i>Search</button>
+                  </form> -->
+
+                  <!-- <form action="/listings" method="GET" class="mb-4">
+                    <input type="text" name="city" placeholder="Search by city..." value="<%= city %>" required>
+                    <button type="submit">Search</button>
+                </form> -->
+
+                <!-- <form action="/listings" method="GET" class="d-flex" role="search">
+                    <input class="form-control me-2 search-inp" type="text" name="city" placeholder="Search by city..." value="<%= typeof city !== 'undefined' ? city : '' %>">
+                    <button class="btn search-btn" type="submit">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search
+                    </button>
+                    
+                </form> -->
+
+
+
+                
+// module.exports=router;
+
+router.route("/")
+  .get(wrapAsync(listingController.index)) // ✅ Handles listing + search
+  .post(
+    isLoggedIn,
+    upload.single("listing[image]"),
+    validateListing,
+    wrapAsync(listingController.createListing)
+  );
+
+// New Listing Form
+router.get("/new", isLoggedIn, listingController.renderNewForm);
+
+router.route("/:id")
+  .get(wrapAsync(listingController.showListing))
+  .put(
+    isLoggedIn,
+    isOwner,
+    upload.single("listing[image]"),
+    validateListing,
+    wrapAsync(listingController.updateListing)
+  )
+  .delete(isLoggedIn, isOwner, wrapAsync(listingController.destroyListing));
+
+// Edit Listing Form
+router.get("/:id/edit", isLoggedIn, isOwner, wrapAsync(listingController.renderEditForm));
+
+
+router.get("/", async (req, res) => {
+  try {
+      const { city } = req.query; // Get city from query parameters
+      let filter = {};
+
+      if (city) {
+          filter.location = { $regex: city, $options: "i" }; // Case-insensitive search
+      }
+
+      const allListings = await Listing.find(filter);
+
+      // ✅ Pass `city` to the template
+      res.render("listings/index.ejs", { allListings, city: city || "" }); 
+  } catch (error) {
+      console.error(error);
+      req.flash("error", "Something went wrong.");
+      res.redirect("/listings");
+  }
+});
+
+
+module.exports = router;
+
+
+
+<% layout("/layouts/boilerplate") %>
+
+<style>
+    #filters{
+       display: flex;
+       flex-wrap: wrap;
+       align-items: center;
+
+    }
+
+    .filter{
+        text-align: center;
+        margin-right: 1rem;
+        margin-top: 1.3rem;
+        opacity: 0.7;
+    }
+    .filter:hover{
+        opacity: 1;
+        cursor: pointer;
+    }
+   
+    .filter p{
+        font: size 0.8rem; ;
+    }
+
+    .tax-info{
+        display: none;
+    }
+
+    .tax-toggle{
+        border: 1px solid black;
+        border-radius: 1rem;
+        height: 2.5rem;
+        padding: 1rem;
+        margin-left: 3.5rem;
+
+        display: flex;
+        align-items: center;
+    }
+
+</style>
+
+
+    
+    <div id="filters">
+        <div class="filter">
+            <div><i class="fa-solid fa-fire"></i></div>
+            <p>Trending</p>          
+        </div>
+
+        <div class="filter">
+            <div><i class="fa-solid fa-bed"></i></div>
+            <p>Room</p>          
+        </div>
+
+        <div class="filter">
+            <div><i class="fa-solid fa-mountain-city"></i></div>
+            <p>Iconic Cities</p>         
+        </div>
+
+        <div class="filter">
+            <div><i class="fa-solid fa-mountain-sun"></i></div>
+            <p>Mountain</p>           
+        </div>
+
+        <div class="filter">
+            <div><i class="fa-brands fa-fort-awesome"></i></div>
+            <p>Castles</p>          
+        </div>
+
+        <div class="filter">
+            <div><i class="fa-solid fa-person-swimming"></i></div>
+            <p>Amazing Pools</p>           
+        </div>
+
+        <div class="filter">
+            <div><i class="fa-solid fa-tents"></i></div>
+            <p>Camping</p>           
+        </div>
+
+        <!-- <div class="filter">
+            <div><i class="fa-solid fa-tractor"></i></div>
+            <p>Farms</p>          
+        </div> -->
+
+        <div class="filter">
+            <div><i class="fa-regular fa-snowflake"></i></div>
+            <p>Arctic</p>  
+        </div>
+
+        <div class="tax-toggle">
+            <div class="form-check-reverse form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Display total after taxes</label>
+              </div>
+        </div>
+        
+        
+        
+
+    </div>
+
+
+    
+    
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+        <% for(let listing of allListings){ %>
+            <a href="/listings/<%= listing._id %>" class="listing-link">
+                <div class="card col listing-card" style="width: 15rem">
+                    <img src="<%= listing.image.url %>" class="card-img-top" alt="listing-img" style="height: 15rem">
+                    <div class="card-img-overlay"> <%= listing.location %> </div>
+                    <div class="card-body">
+                        <p class="card-text"><b><%= listing.title %></b> <br>
+                          ₹ <%= listing.price.toLocaleString("en-IN") %> / night
+                        </p>
+                    </div>
+                </div>
+            </a>
+        <% } %>
+    </div>
+    
+
+       
+    
+    <script>
+        let taxSwitch=document.getElementById("flexSwitchCheckDefault");
+        taxSwitch.addEventListener("click",()=>{
+            let taxInfo=document.getElementsByClassName("tax-info");
+            
+            for(info of taxInfo){
+                if(info.style.display !="inline"){
+                    info.style.display ="inline";
+                }
+                else{
+                    info.style.display ="none"
+                }
+            }
+        });
+    </script>
+
+
+
+        
+
+
+<!-- search -->
+    <!-- <form action="/listings" method="GET" class="mb-4">
+        <input type="text" name="city" placeholder="Search by city..." value="<%= city %>" required>
+        <button type="submit">Search</button>
+    </form> -->
+    
+
+
+    <!-- search -->
+    <!-- <form action="/listings" method="GET" class="mb-4">
+        <input type="text" name="city" placeholder="Search by city..." value="<%= city %>" required>
+        <button type="submit">Search</button>
+    </form> -->
+
+
+
+
+
+
+
+
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+        <% for(let listing of allListings){ %>
+            <a href="/listings/<%= listing._id %> " class="listing-link">
+            <div  class="card col listing-card" style="width: 15rem">
+
+                <img src=" <%= listing.image.url %>" class="card-img-top" alt="listing-img"  style="height: 15rem">
+                <div class="card-img-overlay">pune</div>
+                <div class="card-body">
+                    <p class="card-text"><b><%= listing.title %> </b> <br>
+                      &#8377;  <%= listing.price.toLocaleString("en-IN") %> / night
+                    <i class="tax-info"> &nbsp;&nbsp; +18% GST</i></p>
+                </div>
+            </div>
+        </a>
+        <% }%>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class="navbar-nav ms-auto">
+        <form action="/listings" method="GET" class="mb-4">
+            <input type="text" name="location" placeholder="Search by city..." value="<%= typeof location !== 'undefined' ? location : '' %>" required>
+            <button type="submit">Search</button>
+        </form>
+
+    </div>
+
+
+
+
+
+
+    <!-- ✅ Booking Form -->
+    <% if (currUser) { %>
+        <h4>Book This Listing</h4>
+        <form action="/bookings/<%= listing._id %>" method="POST" class="needs-validation" novalidate>
+          <div class="mb-3">
+            <label for="checkIn" class="form-label">Check-in Date</label>
+            <input type="date" name="checkIn" id="checkIn" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="checkOut" class="form-label">Check-out Date</label>
+            <input type="date" name="checkOut" id="checkOut" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Book Now</button>
+        </form>
+      <% } else { %>
+        <p><a href="/login">Log in</a> to book this listing.</p>
+      <% } %>
+      
